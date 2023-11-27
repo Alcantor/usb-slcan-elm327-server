@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "USB Serial Telnet Server"
+rootProject.name = "USB SLCAN to ELM327 Server"
 include ':app'

@@ -1,41 +1,50 @@
-# USB Serial Telnet Server
-Android application that binds a USB serial converter to a Telnet client
+# CANable SLCAN to ELM327 Bridge
 
-Just connect a USB serial adapter into USB OTG port of your Android device, start this app and connect to it using any Telnet client like
-* [JuiceSSH](https://play.google.com/store/apps/details?id=com.sonelli.juicessh) using the same Android device (connect to localhost)
-* Telnet client on a computer on the same network (connect over Wi-Fi)
+Android application that binds an USB CANable adapter to an ELM327 Application.
 
-![Screenshot](https://user-images.githubusercontent.com/4236181/170989042-b82958ff-372b-4733-bbcb-ce98ebf331fc.png)
+Connect a USB CANable adapter to the USB OTG port of your Android device. Start this app and connect to it using an ELM327 client, such as [OBDFusion](https://play.google.com/store/apps/details?id=OCTech.Mobile.Applications.TouchScan) or [Torque](https://play.google.com/store/apps/details?id=org.prowl.torque).
 
-This method allows to use all console features like colors and special keys. So you can easily control/install something like network devices with serial port using only your Android device. Also, you can use it as remote console transmitter.
+Configure the OBD application as you would with a WiFi ELM327, using the port 127.0.0.1 if on the same Android device.
 
-![Photo](https://user-images.githubusercontent.com/4236181/170874522-11253639-8eb8-4a95-b70d-e875a2f2baad.jpg)
+This application can achieve speeds of over 300 PIDs/second, making it faster than the OBDLink SX adapter, which is supposed to be the fastest adapter.
 
-## Compatible Devices
-This app uses [usb-serial-for-android  library by mik3y](https://github.com/mik3y/usb-serial-for-android) and supports USB to serial converter chips:
-* FTDI FT232R, FT232H, FT2232H, FT4232H, FT230X, FT231X, FT234XD
-* Prolific PL2303
-* Silabs CP2102 and all other CP210x
-* Qinheng CH340, CH341A
+![Screenshot](obdspeed.png)
 
-and devices implementing the CDC/ACM protocol like
-* Arduino using ATmega32U4
-* Digispark using V-USB software USB
-* BBC micro:bit using ARM mbed DAPLink firmware
-* ...
+![Screenshot](obdspeed2.png)
 
-## Download on Google Play
+The ELM327 emulation is based on the OBDLink LX.
 
-https://play.google.com/store/apps/details?id=com.clusterrr.usbserialtelnetserver
+This application is derived from [usb-serial-telnet-server](https://github.com/ClusterM/usb-serial-telnet-server).
 
-## Donate
-* [Buy Me A Coffee](https://www.buymeacoffee.com/cluster)
-* [Donation Alerts](https://www.donationalerts.com/r/clustermeerkat)
-* [Boosty](https://boosty.to/cluster)
-* BTC: 1MBYsGczwCypXhMBocoDQWxx7KZT2iiwzJ
-* PayPal is not available in Armenia :(
+## My setup
 
-## Contacts
-* My site (Russian): https://clusterrr.com
-* Email: cluster@cluster.wtf
-* Telegram: https://t.me/Cluster_M
+I've connected the CANable behind a Joying 6.2 headunit.
+
+![HW-Setup](hwsetup.png)
+
+## Compatibility
+
+ - Only for CAN-Bus based car (No K-Line Support).
+ - Only for SLCAN based CAN-Bus adapter.
+
+## FAQ
+
+**Q: Wouldn't it be better to have a modified firmware for CANable with the ELM327 emulation in it?**
+
+**A:** Most OBD application (not all), only have driver implementation for the FTDI chip and not for the CANable CDC ACM.
+
+**Q: Why not use the Candlelight instead of the slcan Firmware?**
+
+**A:** It would be probably better to use the Candlelight Firmware, but an implementation for the gs_usb on Android has to be done.
+
+**Q: My device is not detected?**
+
+**A:** Ensure that you have the [slcan firmware](https://canable.io/updater/) on it.
+
+**Q: Waren't you happy with the OBDLink LX adapter?**
+
+**A:** I'am using a Joying 6.2 Headunit in my car, and I coundn't achieve more than 18 PIDs/second. I suspect the bluetooth stack is very poor.
+
+**Q: How do I prevent the Joying Head Unit from terminating the service when going into deep sleep (turning key off)?**
+
+**A:** You need to add the application to the file "/oem/app/skipkillapp.prop" file. See "JoyingUpdate.zip" file.

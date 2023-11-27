@@ -1,7 +1,5 @@
 <resources>
-    <string name="app_name">USB Serial Telnet Server</string>
-    <string name="started_please_connect">Started, please connect to:</string>
-    <string name="not_started">Not started</string>
+    <string name="app_name">SLCAN-ELM327 Bridge</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="tcp_port_to_listen">TCP port to listen</string>
@@ -9,14 +7,20 @@
     <string name="data_bits">Data bits</string>
     <string name="stop_bits">Stop bits</string>
     <string name="parity">Parity</string>
-    <string name="started">started</string>
-    <string name="device_not_found">Error: USB serial device not found</string>
-    <string name="error">Error:</string>
-    <string name="stopped">stopped</string>
-    <string name="already_started">Already started</string>
-    <string name="no_local_echo">Forced local echo off</string>
-    <string name="remove_lf">Convert client\'s CR-LF to CR</string>
-    <string name="autostart_on_device_connect">Autostart on device attach</string>
+    <string name="auto_start">Autostart</string>
+    <string name="running">running</string>
+    <string name="usb_not_started">"USB: Not Started"</string>;
+    <string name="usb_wait">"USB: Wait on a SLCAN device..."</string>
+    <string name="usb_permission">"USB: Please grant permission!"</string>
+    <string name="usb_connected">"USB: Connected to SLCAN"</string>
+    <string name="usb_stopping">"USB: Stopping"</string>
+    <string name="usb_stopped">"USB: Stopped"</string>
+    <string name="net_not_started">"NET: Not Started"</string>;
+    <string name="net_wait">"NET: Wait on ELM327 client..."</string>
+    <string name="net_connected">"NET: Connected to"</string>
+    <string name="net_command">"NET: Got command "</string>
+    <string name="net_stopping">"NET: Stopping"</string>
+    <string name="net_stopped">"NET: Stopped"</string>
     <string-array name="data_bits">
         <item>5</item>
         <item>6</item>
@@ -39,6 +43,6 @@
     <string-array name="autostart">
         <item>Disabled</item>
         <item>Enabled</item>
-        <item>+Autoclose</item>
+        <item>+OBDLink</item>
     </string-array>
 </resources>

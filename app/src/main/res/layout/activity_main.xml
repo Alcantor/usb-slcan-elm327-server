@@ -32,15 +32,29 @@
         app:layout_constraintStart_toEndOf="@+id/buttonStart" />
 
     <TextView
-        android:id="@+id/textViewStatus"
+        android:id="@+id/textViewStatusNET"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/buttonStart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatusUSB" />
+
+    <TextView
+        android:id="@+id/textViewStatusUSB"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/buttonStart"
+        app:layout_constraintBottom_toTopOf="@+id/textViewStatusNET"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView2" />
@@ -50,7 +64,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/textViewStatus"
+        app:layout_constraintBottom_toTopOf="@+id/textViewStatusUSB"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -101,7 +115,7 @@
                 android:layout_marginEnd="24dp"
                 android:ems="10"
                 android:inputType="number"
-                android:maxLength="6"
+                android:maxLength="7"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/textViewBaudRate"
                 app:layout_constraintTop_toBottomOf="@+id/editTextTcpPort" />
@@ -170,51 +184,11 @@
                 app:layout_constraintTop_toBottomOf="@+id/spinnerStopBits" />
 
             <TextView
-                android:id="@+id/textNoLocalEcho"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="@string/no_local_echo"
-                app:layout_constraintBottom_toBottomOf="@+id/switchNoLocalEcho"
-                app:layout_constraintEnd_toStartOf="@+id/switchNoLocalEcho"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/switchNoLocalEcho" />
-
-            <Switch
-                android:id="@+id/switchNoLocalEcho"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginEnd="24dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textNoLocalEcho"
-                app:layout_constraintTop_toBottomOf="@+id/spinnerParity" />
-
-            <TextView
-                android:id="@+id/textRemoveLf"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="@string/remove_lf"
-                app:layout_constraintBottom_toBottomOf="@+id/switchRemoveLf"
-                app:layout_constraintEnd_toStartOf="@+id/switchRemoveLf"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/switchRemoveLf" />
-
-            <Switch
-                android:id="@+id/switchRemoveLf"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginEnd="24dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textRemoveLf"
-                app:layout_constraintTop_toBottomOf="@+id/switchNoLocalEcho" />
-
-            <TextView
                 android:id="@+id/textAutostart"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:text="@string/autostart_on_device_connect"
+                android:text="@string/auto_start"
                 app:layout_constraintBottom_toBottomOf="@+id/spinnerAutostart"
                 app:layout_constraintEnd_toStartOf="@+id/spinnerAutostart"
                 app:layout_constraintStart_toStartOf="parent"
@@ -228,7 +202,7 @@
                 android:entries="@array/autostart"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/textAutostart"
-                app:layout_constraintTop_toBottomOf="@+id/switchRemoveLf" />
+                app:layout_constraintTop_toBottomOf="@+id/spinnerParity"  />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
