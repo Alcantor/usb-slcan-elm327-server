@@ -2,11 +2,9 @@
     <string name="app_name">SLCAN-ELM327 Bridge</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
-    <string name="tcp_port_to_listen">TCP port to listen</string>
-    <string name="baud_rate">Baud rate</string>
-    <string name="data_bits">Data bits</string>
-    <string name="stop_bits">Stop bits</string>
-    <string name="parity">Parity</string>
+    <string name="elm_port">ELM327 listen port</string>
+    <string name="net_enabled">Enable SLCAN NET</string>
+    <string name="net_port">SLCAN NET port</string>
     <string name="auto_start">Autostart</string>
     <string name="running">running</string>
     <string name="usb_not_started">"USB: Not Started"</string>;
@@ -15,31 +13,22 @@
     <string name="usb_connected">"USB: Connected to SLCAN"</string>
     <string name="usb_stopping">"USB: Stopping"</string>
     <string name="usb_stopped">"USB: Stopped"</string>
-    <string name="net_not_started">"NET: Not Started"</string>;
-    <string name="net_wait">"NET: Wait on ELM327 client..."</string>
-    <string name="net_connected">"NET: Connected to"</string>
-    <string name="net_command">"NET: Got command "</string>
+    <string name="usb_error">"USB: Write error"</string>
+    <string name="elm_not_started">"ELM: Not Started"</string>;
+    <string name="elm_wait">"ELM: Wait a ELM327 client on "</string>
+    <string name="elm_connected">"ELM: Connected to "</string>
+    <string name="elm_command">"ELM: Got command "</string>
+    <string name="elm_transmit">"ELM: Transmit data"</string>
+    <string name="elm_stopping">"ELM: Stopping"</string>
+    <string name="elm_stopped">"ELM: Stopped"</string>
+    <string name="elm_error">"ELM: Send error"</string>
+    <string name="net_not_started">"NET: Not Started"</string>
+    <string name="net_wait">"NET: Wait a client on "</string>
+    <string name="net_connected">"NET: Connected to "</string>
+    <string name="net_transmit">"NET: Transmit data"</string>
     <string name="net_stopping">"NET: Stopping"</string>
     <string name="net_stopped">"NET: Stopped"</string>
-    <string-array name="data_bits">
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-    </string-array>
-    <string-array name="stop_bits">
-        <item>1 stop bit</item>
-        <item>1.5 stop bits</item>
-        <item>2 stop bits</item>
-    </string-array>
-    <string-array name="parity">
-        <item>None</item>
-        <item>Odd</item>
-        <item>Even</item>
-        <item>Mark</item>
-        <item>Space</item>
-    </string-array>
+    <string name="net_error">"NET: Send error"</string>
     <string-array name="autostart">
         <item>Disabled</item>
         <item>Enabled</item>

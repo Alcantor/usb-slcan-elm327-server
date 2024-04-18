@@ -27,6 +27,20 @@ I've connected the CANable behind a Joying 6.2 headunit.
  - Only for CAN-Bus based car (No K-Line Support).
  - Only for SLCAN based CAN-Bus adapter.
 
+## Use the SLCAN over NET
+
+### With a Linux client
+
+```
+socat -d -d TCP:192.168.xxx.yyy:4444 PTY,link=/tmp/slcan,raw,echo=0
+slcan_attach /tmp/slcan
+ip link set slcan0 up
+```
+
+### Python-can
+
+Select "slcan" interface and put "socket://192.168.xxx.yyy:4444" as device.
+
 ## FAQ
 
 **Q: Wouldn't it be better to have a modified firmware for CANable with the ELM327 emulation in it?**

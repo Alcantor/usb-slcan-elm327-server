@@ -22,16 +22,13 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
-import com.hoho.android.usbserial.driver.UsbSerialPort;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener, Service.StatusUpdateCallback {
-    final static String SETTING_TCP_PORT = "tcp_port";
-    final static String SETTING_BAUD_RATE = "baud_rate";
-    final static String SETTING_DATA_BITS = "data_bits";
-    final static String SETTING_STOP_BITS = "stop_bits";
-    final static String SETTING_PARITY = "parity";
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, Service.StatusUpdateCallback {
+    final static String SETTING_ELM_PORT = "elm_port";
+    final static String SETTING_NET_ENABLED = "net_enabled";
+    final static String SETTING_NET_PORT = "net_port";
     final static String SETTING_AUTOSTART = "autostart";
 
     final static int AUTOSTART_DISABLED = 0;
@@ -39,9 +36,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     final static int AUTOSTART_OBDLINK = 2;
 
     private Button buttonStart, buttonStop;
-    private EditText textTcpPort, textBaudRate;
-    private Spinner spDataBits, spStopBits, spParity, spAutostart;
-    private TextView statusUSB, statusNET;
+    private EditText textElmPort, textNetPort;
+    private Switch swNetEnabled;
+    private Spinner spAutostart;
+    private TextView statusUsb, statusElm, statusNet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,21 +48,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         buttonStart = findViewById(R.id.buttonStart);
         buttonStop = findViewById(R.id.buttonStop);
-        textTcpPort = findViewById(R.id.editTextTcpPort);
-        textBaudRate = findViewById(R.id.editTextNumberBaudRate);
-        spDataBits = findViewById(R.id.spinnerDataBits);
-        spStopBits = findViewById(R.id.spinnerStopBits);
-        spParity = findViewById(R.id.spinnerParity);
-        statusUSB = findViewById(R.id.textViewStatusUSB);
-        statusNET = findViewById(R.id.textViewStatusNET);
+        textElmPort = findViewById(R.id.editTextElmPort);
+        swNetEnabled = findViewById(R.id.switchNetEnabled);
+        textNetPort = findViewById(R.id.editTextNetPort);
         spAutostart = findViewById(R.id.spinnerAutostart);
 
-        spAutostart.setOnItemSelectedListener(this);
+        statusUsb = findViewById(R.id.textViewStatusUsb);
+        statusElm = findViewById(R.id.textViewStatusElm);
+        statusNet = findViewById(R.id.textViewStatusNet);
+
+        /* Set default text. */
+        statusUsb.setText(getString(R.string.usb_not_started));
+        statusElm.setText(getString(R.string.elm_not_started));
+        statusNet.setText(getString(R.string.net_not_started));
+
         buttonStart.setOnClickListener(this);
         buttonStop.setOnClickListener(this);
-
-        statusUSB.setText(getString(R.string.usb_not_started));
-        statusNET.setText(getString(R.string.net_not_started));
 
         autostart(this);
         updateSettings(false);
@@ -105,42 +104,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (parent.getId() != R.id.spinnerAutostart) return;
-        SharedPreferences prefs = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
-        prefs.edit()
-                .putInt(SETTING_AUTOSTART, position)
-                .commit();
+    public void onStatusUpdateUsb(final String message) {
+        runOnUiThread(() -> statusUsb.setText(message));
     }
 
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        // Unused
+    public void onStatusUpdateElm(final String message) {
+        runOnUiThread(() -> statusElm.setText(message));
     }
 
-    @Override
-    public void onStatusUpdateUSB(String message) { statusUSB.setText(message); }
-    public void onStatusUpdateNET(String message) { statusNET.setText(message); }
+    public void onStatusUpdateNet(final String message) {
+        runOnUiThread(() -> statusNet.setText(message));
+    }
 
-    public static Intent startService(Context c, boolean force_restart){
+    private static Intent startService(Context c, boolean force_restart){
         Intent serviceIntent = new Intent(c, Service.class);
         SharedPreferences prefs = c.getSharedPreferences(c.getString(R.string.app_name), Context.MODE_PRIVATE);
         serviceIntent.putExtra(Service.FORCE_RESTART, force_restart);
-        serviceIntent.putExtra(Service.KEY_TCP_PORT, prefs.getInt(SETTING_TCP_PORT, 2323));
-        serviceIntent.putExtra(Service.KEY_BAUD_RATE, prefs.getInt(SETTING_BAUD_RATE, 115200));
-        serviceIntent.putExtra(Service.KEY_DATA_BITS, prefs.getInt(SETTING_DATA_BITS, 3) + 5);
-        switch (prefs.getInt(SETTING_STOP_BITS, 0)) {
-            case 0:
-                serviceIntent.putExtra(Service.KEY_STOP_BITS, UsbSerialPort.STOPBITS_1);
-                break;
-            case 1:
-                serviceIntent.putExtra(Service.KEY_STOP_BITS, UsbSerialPort.STOPBITS_1_5);
-                break;
-            case 2:
-                serviceIntent.putExtra(Service.KEY_STOP_BITS, UsbSerialPort.STOPBITS_2);
-                break;
-        }
-        serviceIntent.putExtra(Service.KEY_PARITY, prefs.getInt(SETTING_PARITY, 0));
+        serviceIntent.putExtra(Service.KEY_ELM_PORT, prefs.getInt(SETTING_ELM_PORT, 35000));
+        serviceIntent.putExtra(Service.KEY_NET_ENABLED, prefs.getBoolean(SETTING_NET_ENABLED, true));
+        serviceIntent.putExtra(Service.KEY_NET_PORT, prefs.getInt(SETTING_NET_PORT, 4444));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             c.startForegroundService(serviceIntent);
         } else {
@@ -167,19 +149,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateSettings(false);
     }
 
-    public static void autostart(Context c){
+    static void autostart(Context c){
         SharedPreferences prefs = c.getSharedPreferences(c.getString(R.string.app_name), Context.MODE_PRIVATE);
         int autostart = prefs.getInt(MainActivity.SETTING_AUTOSTART, MainActivity.AUTOSTART_DISABLED);
         if (autostart!= MainActivity.AUTOSTART_DISABLED) {
             MainActivity.startService(c, false);
             /* Autostart OBDLink too, but after a delay of 5 seconds. */
-            if(autostart == MainActivity.AUTOSTART_OBDLINK){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent intent = c.getPackageManager().getLaunchIntentForPackage("OCTech.Mobile.Applications.OBDLink");
-                        if (intent != null) c.startActivity(intent);
-                    }
+            if (autostart == MainActivity.AUTOSTART_OBDLINK) {
+                new Handler().postDelayed(() -> {
+                    Intent intent = c.getPackageManager().getLaunchIntentForPackage("OCTech.Mobile.Applications.OBDLink");
+                    if (intent != null) c.startActivity(intent);
                 }, 5000);
             }
         }
@@ -188,26 +167,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // Settings ////////////////////////////////////////////////////////////////////////////////////
     private void saveSettings() {
         SharedPreferences prefs = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
-        int tcpPort;
+        int elmPort;
         try {
-            tcpPort = Integer.parseInt(this.textTcpPort.getText().toString());
+            elmPort = Integer.parseInt(this.textElmPort.getText().toString());
         }
         catch (NumberFormatException e) {
-            tcpPort = 35000;
+            elmPort = 35000;
         }
-        int baudRate;
+        int netPort;
         try {
-            baudRate = Integer.parseInt(this.textBaudRate.getText().toString());
+            netPort = Integer.parseInt(this.textNetPort.getText().toString());
         }
         catch (NumberFormatException e) {
-            baudRate = 115200;
+            netPort = 4444;
         }
+        int position = spAutostart.getSelectedItemPosition();
         prefs.edit()
-                .putInt(SETTING_TCP_PORT, tcpPort)
-                .putInt(SETTING_BAUD_RATE, baudRate)
-                .putInt(SETTING_DATA_BITS, spDataBits.getSelectedItemPosition())
-                .putInt(SETTING_STOP_BITS, spStopBits.getSelectedItemPosition())
-                .putInt(SETTING_PARITY, spStopBits.getSelectedItemPosition())
+                .putInt(SETTING_ELM_PORT, elmPort)
+                .putBoolean(SETTING_NET_ENABLED, swNetEnabled.isChecked())
+                .putInt(SETTING_NET_PORT, netPort)
+                .putInt(SETTING_AUTOSTART, position)
                 .commit();
     }
 
@@ -215,21 +194,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SharedPreferences prefs = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
         buttonStart.setEnabled(!started);
         buttonStop.setEnabled(started);
-        textTcpPort.setEnabled(!started);
-        textBaudRate.setEnabled(!started);
-        spDataBits.setEnabled(!started);
-        spStopBits.setEnabled(!started);
-        spParity.setEnabled(!started);
-        textTcpPort.setText(String.valueOf(prefs.getInt(SETTING_TCP_PORT, 35000)));
-        textBaudRate.setText(String.valueOf(prefs.getInt(SETTING_BAUD_RATE, 115200)));
-        spDataBits.setSelection(prefs.getInt(SETTING_DATA_BITS, 3));
-        spStopBits.setSelection(prefs.getInt(SETTING_STOP_BITS, 0));
-        spParity.setSelection(prefs.getInt(SETTING_PARITY, 0));
+        textElmPort.setEnabled(!started);
+        swNetEnabled.setEnabled(!started);
+        textNetPort.setEnabled(!started);
+        spAutostart.setEnabled(!started);
+        textElmPort.setText(String.valueOf(prefs.getInt(SETTING_ELM_PORT, 35000)));
+        swNetEnabled.setChecked(prefs.getBoolean(SETTING_NET_ENABLED, true));
+        textNetPort.setText(String.valueOf(prefs.getInt(SETTING_NET_PORT, 4444)));
         spAutostart.setSelection(prefs.getInt(SETTING_AUTOSTART, AUTOSTART_DISABLED));
     }
 
     // Communication Service <-> Activity  /////////////////////////////////////////////////////////
-    Service service = null;
+    private Service service = null;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -237,8 +213,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Service.LocalBinder binder = (Service.LocalBinder) iBinder;
             service = binder.getService();
             service.setMessageCallback(MainActivity.this);
-            statusUSB.setText(service.getLastStatusUSB());
-            statusNET.setText(service.getLastStatusNET());
+            statusUsb.setText(service.getLastStatusUsb());
+            statusElm.setText(service.getLastStatusElm());
+            statusNet.setText(service.getLastStatusNet());
             updateSettings(true);
         }
 
@@ -246,11 +223,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceDisconnected(ComponentName componentName) {
             service = null;
             updateSettings(false);
+            /* Set default text. */
+            statusUsb.setText(getString(R.string.usb_not_started));
+            statusElm.setText(getString(R.string.elm_not_started));
+            statusNet.setText(getString(R.string.net_not_started));
         }
     };
 
     // Whitelisting of Battery Optimization  ///////////////////////////////////////////////////////
-    public static Intent prepareIntentForWhiteListingOfBatteryOptimization(Context context, String packageName, boolean alsoWhenWhiteListed) {
+    private static Intent prepareIntentForWhiteListingOfBatteryOptimization(Context context, String packageName, boolean alsoWhenWhiteListed) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             return null;
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) == PackageManager.PERMISSION_DENIED)
@@ -274,11 +255,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return intent;
     }
 
-    public enum WhiteListedInBatteryOptimizations {
+    private enum WhiteListedInBatteryOptimizations {
         WHITE_LISTED, NOT_WHITE_LISTED, ERROR_GETTING_STATE, UNKNOWN_TOO_OLD_ANDROID_API_FOR_CHECKING, IRRELEVANT_OLD_ANDROID_API
     }
 
-    public static WhiteListedInBatteryOptimizations getIfAppIsWhiteListedFromBatteryOptimizations(Context context, String packageName) {
+    private static WhiteListedInBatteryOptimizations getIfAppIsWhiteListedFromBatteryOptimizations(Context context, String packageName) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             return WhiteListedInBatteryOptimizations.IRRELEVANT_OLD_ANDROID_API;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
