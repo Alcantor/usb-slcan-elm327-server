@@ -68,10 +68,24 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="4dp"
         android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/buttonStart"
+        app:layout_constraintBottom_toTopOf="@+id/textViewStatusScr"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewStatusElm" />
+
+    <TextView
+        android:id="@+id/textViewStatusScr"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/buttonStart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatusNet" />
 
     <ScrollView
         android:id="@+id/scrollView"
