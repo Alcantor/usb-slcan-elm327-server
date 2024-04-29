@@ -102,6 +102,7 @@ public class UsbSerialThread extends Thread {
                 if(f != null) {
                     service.threadElm.proceedCAN(f);
                     service.threadNet.proceedCAN(f);
+                    service.lt.proceedCAN(f);
                 }
                 /* Remove the used data and continue */
                 roff = i+1;

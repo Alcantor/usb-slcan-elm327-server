@@ -29,6 +29,12 @@
     <string name="net_stopping">"NET: Stopping"</string>
     <string name="net_stopped">"NET: Stopped"</string>
     <string name="net_error">"NET: Send error"</string>
+    <string name="scr_not_loaded">"SCR: Script not loaded"</string>
+    <string name="scr_all_loaded">"SCR: Script loaded"</string>
+    <string name="scr_error_load">"SCR: Load error, "</string>
+    <string name="scr_error">"SCR: Execution error, "</string>
+    <string name="scr_msg">"SCR: "</string>
+    <string name="not_available">"Not available"</string>
     <string-array name="autostart">
         <item>Disabled</item>
         <item>Enabled</item>
