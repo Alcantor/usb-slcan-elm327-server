@@ -1,5 +1,7 @@
 package com.clusterrr.slcan2elm327;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -13,10 +15,13 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,7 +43,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText textElmPort, textNetPort;
     private Switch swNetEnabled;
     private Spinner spAutostart;
-    private TextView statusUsb, statusElm, statusNet;
+    private TextView statusUsb, statusElm, statusNet, statusScr;
+    private Menu menu = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,11 +61,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         statusUsb = findViewById(R.id.textViewStatusUsb);
         statusElm = findViewById(R.id.textViewStatusElm);
         statusNet = findViewById(R.id.textViewStatusNet);
+        statusScr = findViewById(R.id.textViewStatusScr);
 
         /* Set default text. */
         statusUsb.setText(getString(R.string.usb_not_started));
         statusElm.setText(getString(R.string.elm_not_started));
         statusNet.setText(getString(R.string.net_not_started));
+        statusScr.setText(getString(R.string.scr_not_loaded));
 
         buttonStart.setOnClickListener(this);
         buttonStop.setOnClickListener(this);
@@ -103,6 +111,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
+        if(service == null || service.threadScr == null)
+            menu.add(R.string.not_available);
+        else
+            for (String s : service.threadScr.getScriptName()) menu.add(s);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(service == null || service.threadScr == null)
+            return super.onOptionsItemSelected(item);
+        return service.threadScr.execute(item.getTitle().toString());
+    }
+
+    @Override
     public void onStatusUpdateUsb(final String message) {
         runOnUiThread(() -> statusUsb.setText(message));
     }
@@ -113,6 +138,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void onStatusUpdateNet(final String message) {
         runOnUiThread(() -> statusNet.setText(message));
+    }
+
+    public void onStatusUpdateScr(final String message) {
+        runOnUiThread(() -> statusScr.setText(message));
     }
 
     private static Intent startService(Context c, boolean force_restart){
@@ -132,6 +161,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void start() {
         saveSettings();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // For Android 11 and above
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivity(intent);
+                return;
+            }
+        } else {
+            // For versions prior to Android 11, guide the user to app settings if WRITE_EXTERNAL_STORAGE permission is not granted
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+                return;
+            }
+        }
 
         Intent ignoreOptimization = prepareIntentForWhiteListingOfBatteryOptimization(
                 this, getPackageName(), false);
@@ -215,7 +262,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             statusUsb.setText(service.getLastStatusUsb());
             statusElm.setText(service.getLastStatusElm());
             statusNet.setText(service.getLastStatusNet());
+            statusScr.setText(service.getLastStatusScr());
             updateSettings(true);
+            if (menu != null && service.threadScr != null) {
+                menu.clear();
+                for (String s : service.threadScr.getScriptName()) menu.add(s);
+            }
         }
 
         @Override
@@ -226,6 +278,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             statusUsb.setText(getString(R.string.usb_not_started));
             statusElm.setText(getString(R.string.elm_not_started));
             statusNet.setText(getString(R.string.net_not_started));
+            statusScr.setText(getString(R.string.scr_not_loaded));
+            if (menu != null) {
+                menu.clear();
+                menu.add(getString(R.string.not_available));
+            }
         }
     };
 

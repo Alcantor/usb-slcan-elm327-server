@@ -62,3 +62,9 @@ Select "slcan" interface and put "socket://192.168.xxx.yyy:4444" as device.
 **Q: How do I prevent the Joying Head Unit from terminating the service when going into deep sleep (turning key off)?**
 
 **A:** You need to add the application to the file "/oem/app/skipkillapp.prop" file. See "JoyingUpdate.zip" file.
+
+## Lotus Extension
+
+The Lotus Extension adds a menu that enables various operations based on a script file.
+
+![Extension](lotus-extension.png)

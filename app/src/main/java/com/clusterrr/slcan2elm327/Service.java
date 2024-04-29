@@ -11,6 +11,8 @@ import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
 
+import com.clusterrr.slcan2elm327.script.ScriptThread;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
@@ -26,9 +28,11 @@ public class Service extends android.app.Service {
     final static String KEY_NET_PORT = "net_port";
 
     String localIp;
+    Lotus lt = null;
     UsbSerialThread threadUsb = null;
     ElmServerThread threadElm = null;
     NetServerThread threadNet = null;
+    ScriptThread threadScr = null;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
@@ -64,9 +68,11 @@ public class Service extends android.app.Service {
         startForeground(1, notification);
 
         localIp = getIPAddress();
+        lt = new Lotus(this);
         threadUsb = new UsbSerialThread(this);
         threadElm = new ElmServerThread(this, intent.getIntExtra(KEY_ELM_PORT,35000));
         threadNet = new NetServerThread(this, intent.getIntExtra(KEY_NET_PORT,4444));
+        threadScr = new ScriptThread(this, lt);
         threadUsb.start();
         threadElm.start();
         if(intent.getBooleanExtra(KEY_NET_ENABLED,true)) threadNet.start();
@@ -112,6 +118,7 @@ public class Service extends android.app.Service {
     private String lastStatusUsb;
     private String lastStatusElm;
     private String lastStatusNet;
+    private String lastStatusScr;
 
     @Override
     public void onCreate(){
@@ -119,6 +126,7 @@ public class Service extends android.app.Service {
         lastStatusUsb = getString(R.string.usb_not_started);
         lastStatusElm = getString(R.string.elm_not_started);
         lastStatusNet = getString(R.string.net_not_started);
+        lastStatusScr = getString(R.string.scr_not_loaded);
     }
 
     public void setMessageCallback(StatusUpdateCallback callback) {
@@ -146,15 +154,24 @@ public class Service extends android.app.Service {
         }
     }
 
+    public void statusUpdateScr(String newStatus) {
+        if (lastStatusScr != newStatus) {
+            lastStatusScr = newStatus;
+            if (statcb != null) statcb.onStatusUpdateScr(newStatus);
+        }
+    }
+
     String getLastStatusUsb() { return lastStatusUsb; }
     String getLastStatusElm() { return lastStatusElm; }
     String getLastStatusNet() { return lastStatusNet; }
+    String getLastStatusScr() { return lastStatusScr; }
 
     public interface StatusUpdateCallback
     {
         void onStatusUpdateUsb(String message);
         void onStatusUpdateElm(String message);
         void onStatusUpdateNet(String message);
+        void onStatusUpdateScr(String message);
     }
 
     private final IBinder binder = new LocalBinder();
