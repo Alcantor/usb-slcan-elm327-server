@@ -90,7 +90,7 @@ public class Service extends android.app.Service {
                 NetworkInterface networkInterface = networkInterfaces.nextElement();
                 if (networkInterface.isUp()) {
                     String name = networkInterface.getName();
-                    if (name.toLowerCase().equals("wlan0") || name.toLowerCase().equals("rmnet0")) {
+                    if (name.equalsIgnoreCase("wlan0") || name.equalsIgnoreCase("rmnet0")) {
                         List<InterfaceAddress> interfaceAddresses = networkInterface.getInterfaceAddresses();
                         for (InterfaceAddress interfaceAddress : interfaceAddresses) {
                             InetAddress address = interfaceAddress.getAddress();

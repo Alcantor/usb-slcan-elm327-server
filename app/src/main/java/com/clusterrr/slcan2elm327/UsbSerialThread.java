@@ -14,9 +14,9 @@ import java.util.List;
 
 public class UsbSerialThread extends Thread {
     private final static int WRITE_TIMEOUT = 1000;
-    private Service service;
+    private final Service service;
     private UsbSerialPort serialPort;
-    private byte[] buffer;
+    private final byte[] buffer;
     private int woff, roff;
     private boolean running;
 
@@ -36,13 +36,13 @@ public class UsbSerialThread extends Thread {
 
     @Override
     public void run() {
-        byte buffer[] = new byte[32];
+        byte[] buffer = new byte[32];
         try {
             UsbManager manager = (UsbManager) service.getSystemService(Context.USB_SERVICE);
             while (running) {
                 try {
                     List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
-                    if (availableDrivers.size() == 0) {
+                    if (availableDrivers.isEmpty()) {
                         service.statusUpdateUsb(service.getString(R.string.usb_wait));
                         Thread.sleep(1000);
                         continue;

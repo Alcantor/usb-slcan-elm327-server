@@ -13,17 +13,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ElmServerThread extends Thread {
-    private Service service;
-    private int port;
+    private final Service service;
+    private final int port;
     private ServerSocket serverSock;
     private Socket sock;
     private InputStream dataInputStream;
     private OutputStream dataOutputStream;
-    private byte[] buffer;
+    private final byte[] buffer;
     private int woff, roff;
     private boolean echo, space, header, linefeed;
     private int timeout, sendid, recvid, recvmask;
-    private Pattern patAT, patST, patData;
+    private final Pattern patAT, patST, patData;
     private BlockingQueue<CANFrame> rxqueue;
     private boolean running;
 
@@ -124,7 +124,7 @@ public class ElmServerThread extends Thread {
             service.statusUpdateElm(service.getString(R.string.elm_command) + command);
             String at = matcherAT.group(1);
             int parameter = 0;
-            if(matcherAT.group(2).length() > 0) {
+            if(!matcherAT.group(2).isEmpty()) {
                 parameter = Integer.parseInt(matcherAT.group(2), 16);
             }
             switch (at) {
@@ -238,7 +238,7 @@ public class ElmServerThread extends Thread {
             service.statusUpdateElm(service.getString(R.string.elm_transmit));
             String data = matcherData.group(1);
             int max = 32;
-            if(matcherData.group(3).length() > 0) {
+            if(!matcherData.group(3).isEmpty()) {
                 max = Integer.parseInt(matcherData.group(3), 16);
             }
             rxqueue.clear();
@@ -265,7 +265,7 @@ public class ElmServerThread extends Thread {
 
     /**
      * Function called by the Usb Serial Thread.
-     * @param f
+     * @param f CAN Frame received from device.
      */
     public void proceedCAN(CANFrame f){
         /* No need for AtomicInteger here on recvmask and recvid, the rxqueue will be clear. */
@@ -278,6 +278,7 @@ public class ElmServerThread extends Thread {
             dataInputStream.close();
             sock.close();
             sock = null;
+            woff = roff = 0;
         }
     }
 

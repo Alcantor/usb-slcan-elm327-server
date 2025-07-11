@@ -8,15 +8,17 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 public class NetServerThread extends Thread {
-    private Service service;
-    private int port;
+    private final Service service;
+    private final int port;
     private ServerSocket serverSock;
     private Socket sock;
     private InputStream dataInputStream;
     private OutputStream dataOutputStream;
-    private byte[] buffer;
+    private final byte[] buffer;
     private int woff, roff;
     private boolean running;
+    private enum Mode {RX_ONLY, TX_ONLY, NORMAL}
+    private Mode mode;
 
     public NetServerThread(Service service, int port) {
         this.service = service;
@@ -25,6 +27,7 @@ public class NetServerThread extends Thread {
         buffer = new byte[1024];
         woff = roff = 0;
         running = true;
+        mode = Mode.TX_ONLY;
     }
 
     @Override
@@ -61,10 +64,15 @@ public class NetServerThread extends Thread {
         for (int i = roff; i < woff; ++i) {
             if ((char) buffer[i] == '\r') {
                 String command = new String(buffer, roff, i-roff, StandardCharsets.ISO_8859_1);
-                CANFrame f = CANFrame.fromSLCAN(command);
-                if(f != null){
-                    service.statusUpdateNet(service.getString(R.string.net_transmit));
-                    service.threadUsb.sendCAN(f);
+                if(command.charAt(0)  == 'O') mode = Mode.NORMAL;
+                else if(command.charAt(0)  == 'C') mode = Mode.TX_ONLY;
+                else if(command.charAt(0)  == 'L') mode = Mode.RX_ONLY;
+                else{
+                    CANFrame f = CANFrame.fromSLCAN(command);
+                    if(f != null && (mode == Mode.NORMAL || mode == Mode.TX_ONLY)){
+                        service.statusUpdateNet(service.getString(R.string.net_transmit));
+                        service.threadUsb.sendCAN(f);
+                    }
                 }
                 /* Remove the used data and continue */
                 roff = i + 1;
@@ -75,10 +83,10 @@ public class NetServerThread extends Thread {
 
     /**
      * Function called by the Usb Serial Thread.
-     * @param f
+     * @param f CAN Frame received from device.
      */
     public void proceedCAN(CANFrame f) {
-        if(sock != null) {
+        if(sock != null && (mode == Mode.NORMAL || mode == Mode.RX_ONLY)) {
             String command = f.toSLCAN();
             service.statusUpdateNet(service.getString(R.string.net_transmit));
             try {
@@ -95,6 +103,8 @@ public class NetServerThread extends Thread {
             dataInputStream.close();
             sock.close();
             sock = null;
+            woff = roff = 0;
+            mode = Mode.TX_ONLY;
         }
     }
 

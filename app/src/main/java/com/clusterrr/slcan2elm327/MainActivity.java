@@ -18,7 +18,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -152,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     static void autostart(Context c){
         SharedPreferences prefs = c.getSharedPreferences(c.getString(R.string.app_name), Context.MODE_PRIVATE);
         int autostart = prefs.getInt(MainActivity.SETTING_AUTOSTART, MainActivity.AUTOSTART_DISABLED);
-        if (autostart!= MainActivity.AUTOSTART_DISABLED) {
+        if (autostart != MainActivity.AUTOSTART_DISABLED) {
             MainActivity.startService(c, false);
             /* Autostart OBDLink too, but after a delay of 5 seconds. */
             if (autostart == MainActivity.AUTOSTART_OBDLINK) {
@@ -187,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .putBoolean(SETTING_NET_ENABLED, swNetEnabled.isChecked())
                 .putInt(SETTING_NET_PORT, netPort)
                 .putInt(SETTING_AUTOSTART, position)
-                .commit();
+                .apply();
     }
 
     private void updateSettings(boolean started) {

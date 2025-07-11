@@ -33,7 +33,7 @@ I've connected the CANable behind a Joying 6.2 headunit.
 
 ```
 socat -d -d TCP:192.168.xxx.yyy:4444 PTY,link=/tmp/slcan,raw,echo=0
-slcan_attach /tmp/slcan
+slcan_attach -o -c /tmp/slcan
 ip link set slcan0 up
 ```
 
