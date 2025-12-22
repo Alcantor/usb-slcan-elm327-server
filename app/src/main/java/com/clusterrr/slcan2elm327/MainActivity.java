@@ -40,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Spinner spAutostart;
     private TextView statusUsb, statusElm, statusNet;
 
+    static final String ACTION_USB_PERMISSION =
+            "com.clusterrr.slcan2elm327.USB_PERMISSION";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

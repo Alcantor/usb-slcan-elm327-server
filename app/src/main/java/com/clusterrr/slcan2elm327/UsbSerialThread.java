@@ -1,6 +1,8 @@
 package com.clusterrr.slcan2elm327;
 
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 
@@ -37,8 +39,10 @@ public class UsbSerialThread extends Thread {
     @Override
     public void run() {
         byte[] buffer = new byte[32];
+        boolean permissionRequested = false;
         try {
             UsbManager manager = (UsbManager) service.getSystemService(Context.USB_SERVICE);
+
             while (running) {
                 try {
                     List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
@@ -51,9 +55,18 @@ public class UsbSerialThread extends Thread {
                     UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
                     if (connection == null) {
                         service.statusUpdateUsb(service.getString(R.string.usb_permission));
+                        /* Explicit permission request - Only needed for some android devices. */
+                        if (!permissionRequested) {
+                            permissionRequested = true;
+                            Intent permIntent = new Intent(service, MainActivity.class);
+                            permIntent.setAction(MainActivity.ACTION_USB_PERMISSION);
+                            PendingIntent permPendingIntent = PendingIntent.getActivity(service, 0, permIntent, PendingIntent.FLAG_IMMUTABLE);
+                            manager.requestPermission(driver.getDevice(), permPendingIntent);
+                        }
                         Thread.sleep(1000);
                         continue;
                     }
+                    permissionRequested = false;
                     serialPort = driver.getPorts().get(0); // Most devices have just one port (port 0)
                     serialPort.open(connection);
                     serialPort.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
