@@ -4,7 +4,7 @@ plugins {
 
 def appVersionCode = 9
 /* Also names the APK, so a branch that ships a variant only sets this. */
-def appVersionName = "2.0"
+def appVersionName = "2.0-lotus"
 
 /*
  * Release signing, from a keystore.properties that is never committed:

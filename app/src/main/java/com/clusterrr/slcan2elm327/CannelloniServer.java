@@ -26,7 +26,7 @@ import java.util.concurrent.BlockingQueue;
  * duplicate traffic.</p>
  *
  * <p>{@link #onFrameReceived} only queues, because it runs on the USB RX
- * thread that also feeds the ELM327 server. Writing there
+ * thread that also feeds the ELM327 server and the Lotus helper. Writing there
  * would be fine almost always - a full CAN bus is around 50 kB/s of cannelloni
  * against a socket send buffer of 64 kB or more - but a peer that stops reading
  * (a sleeping laptop, a dropped link) fills that buffer within seconds, and the

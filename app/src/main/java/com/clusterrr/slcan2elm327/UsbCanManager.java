@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  * can never race an open.</p>
  */
 public class UsbCanManager {
-    /** The bus runs at 500 kbit/s, as did the old SLCAN "S6" setup. */
+    /** The Lotus bus runs at 500 kbit/s, as did the old SLCAN "S6" setup. */
     public final static int BITRATE = 500000;
 
     final static String ACTION_USB_PERMISSION =

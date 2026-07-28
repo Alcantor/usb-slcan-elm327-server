@@ -15,6 +15,8 @@ import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
 
+import com.clusterrr.slcan2elm327.script.ScriptRunner;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
@@ -52,9 +54,11 @@ public class Service extends android.app.Service {
     }
 
     String localIp;
+    Lotus lt = null;
     UsbCanManager usbCan = null;
     ElmServer elm = null;
     CannelloniServer net = null;
+    ScriptRunner script = null;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
@@ -96,15 +100,18 @@ public class Service extends android.app.Service {
         SharedPreferences prefs = prefs(this);
 
         localIp = getIPAddress();
+        lt = new Lotus(this);
         usbCan = new UsbCanManager(this, prefs.getString(SETTING_CAN_DEVICE, ""));
         elm = new ElmServer(this, prefs.getInt(SETTING_ELM_PORT, DEFAULT_ELM_PORT));
         int netMode = prefs.getInt(SETTING_NET_MODE, NET_MODE_BOTH);
         net = new CannelloniServer(this,
                 prefs.getInt(SETTING_NET_PORT, DEFAULT_NET_PORT), netMode);
+        script = new ScriptRunner(this, lt);
         /* Everything that consumes the bus registers itself; the androidCAN
          * driver dispatches to each of them from its RX thread. */
         usbCan.addFrameListener(elm);
         usbCan.addFrameListener(net);
+        usbCan.addFrameListener(lt);
         usbCan.start();
         elm.start();
         if(netMode != NET_MODE_DISABLED) net.start();
@@ -115,6 +122,9 @@ public class Service extends android.app.Service {
     @Override
     public void onDestroy()
     {
+        /* The script first: it drives the ECU through usbCan, so stopping it
+         * after the adapter had gone would let it run on writing nothing. */
+        if(script != null) script.close();
         if(usbCan != null) usbCan.close();
         if(elm != null) elm.close();
         if(net != null) net.close();
@@ -164,6 +174,7 @@ public class Service extends android.app.Service {
     private String lastStatusUsb;
     private String lastStatusElm;
     private String lastStatusNet;
+    private String lastStatusScr;
 
     @Override
     public void onCreate(){
@@ -171,6 +182,7 @@ public class Service extends android.app.Service {
         lastStatusUsb = getString(R.string.usb_not_started);
         lastStatusElm = getString(R.string.elm_not_started);
         lastStatusNet = getString(R.string.net_not_started);
+        lastStatusScr = getString(R.string.scr_not_loaded);
     }
 
     public void setMessageCallback(StatusUpdateCallback callback) {
@@ -198,15 +210,24 @@ public class Service extends android.app.Service {
         }
     }
 
+    public void statusUpdateScr(String newStatus) {
+        if (lastStatusScr != newStatus) {
+            lastStatusScr = newStatus;
+            if (statcb != null) statcb.onStatusUpdateScr(newStatus);
+        }
+    }
+
     String getLastStatusUsb() { return lastStatusUsb; }
     String getLastStatusElm() { return lastStatusElm; }
     String getLastStatusNet() { return lastStatusNet; }
+    String getLastStatusScr() { return lastStatusScr; }
 
     public interface StatusUpdateCallback
     {
         void onStatusUpdateUsb(String message);
         void onStatusUpdateElm(String message);
         void onStatusUpdateNet(String message);
+        void onStatusUpdateScr(String message);
     }
 
     private final IBinder binder = new LocalBinder();

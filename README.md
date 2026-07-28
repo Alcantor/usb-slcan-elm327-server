@@ -127,3 +127,8 @@ tables, and mirrored in `app/src/main/res/xml/usb_device_filter.xml`.
 
 **A:** You need to add the application to the file "/oem/app/skipkillapp.prop" file. See "JoyingUpdate.zip" file.
 
+## Lotus Extension
+
+The Lotus Extension adds a menu that enables various operations based on a script file.
+
+![Extension](lotus-extension.png)
