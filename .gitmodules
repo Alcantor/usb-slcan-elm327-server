@@ -1,0 +1,3 @@
+[submodule "androidCAN"]
+	path = androidCAN
+	url = https://github.com/Alcantor/androidCAN.git

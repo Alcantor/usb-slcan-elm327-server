@@ -1,7 +1,26 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id 'com.android.application' version '8.13.2' apply false
-    id 'com.android.library' version '8.13.2' apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+}
+
+/*
+ * androidCAN lives outside this project's directory (see settings.gradle), so
+ * the IDE cannot give each of its source sets its own content root and instead
+ * shows the whole module under every one - androidTest, main and unitTest as
+ * three identical trees. The library carries no test sources here (its tests
+ * live in its own repository), so drop those components: the model then has
+ * main alone, and sync has two fewer variants to build.
+ */
+project(':androidCAN') {
+    plugins.withId('com.android.library') {
+        androidComponents {
+            beforeVariants(selector().all()) { variant ->
+                variant.enableUnitTest = false
+                variant.enableAndroidTest = false
+            }
+        }
+    }
 }
 
 task clean(type: Delete) {

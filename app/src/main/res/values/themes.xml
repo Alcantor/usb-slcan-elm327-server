@@ -1,18 +1,29 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.USBSerialTelnetServer" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/blue</item>
-        <item name="colorPrimaryVariant">@color/blue_dark</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
+    <!--
+      Always dark, deliberately: this sits on a car head unit, where a theme
+      that turns white in daylight is the wrong trade. There is no values-night
+      variant for the same reason - one look, day and night.
+    -->
+    <style name="Theme.CanElm327Bridge" parent="Theme.MaterialComponents">
+        <!-- Accent: buttons, the action bar, switches when on. -->
+        <item name="colorPrimary">@color/orange</item>
+        <item name="colorPrimaryVariant">@color/orange_dark</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSecondary">@color/orange_light</item>
+        <item name="colorSecondaryVariant">@color/orange</item>
         <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/blue_dark</item>
-        <!-- Customize your theme here. -->
-        <item name="android:textColor">@color/text_color</item>
-        <item name="android:textColorPrimary">@color/text_color</item>
+
+        <!-- The grey the accents sit on. -->
+        <item name="android:colorBackground">@color/gray_900</item>
+        <item name="colorSurface">@color/gray_800</item>
+        <item name="colorOnBackground">@color/white</item>
+        <item name="colorOnSurface">@color/white</item>
+
+        <item name="android:statusBarColor" tools:targetApi="l">@color/orange_dark</item>
+
+        <!-- White text, half-transparent when disabled: this is what greys the
+             port fields and spinners out while the service is running. -->
+        <item name="android:textColor">@color/text_color_dark</item>
+        <item name="android:textColorPrimary">@color/text_color_dark</item>
     </style>
 </resources>

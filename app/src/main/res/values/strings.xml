@@ -1,19 +1,22 @@
 <resources>
-    <string name="app_name">SLCAN-ELM327 Bridge</string>
+    <string name="app_name">CAN-ELM327 Bridge</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
+    <string name="can_device">CAN adapter</string>
+    <string name="can_device_last">Last used adapter</string>
+    <string name="can_device_none">No adapter detected</string>
     <string name="elm_port">ELM327 listen port</string>
-    <string name="net_enabled">Enable SLCAN NET</string>
-    <string name="net_port">SLCAN NET port</string>
+    <string name="net_mode">Cannelloni</string>
+    <string name="net_port">Cannelloni listen port</string>
     <string name="auto_start">Autostart</string>
     <string name="running">running</string>
     <string name="usb_not_started">"USB: Not Started"</string>;
-    <string name="usb_wait">"USB: Wait on a SLCAN device..."</string>
+    <string name="usb_wait">"USB: Wait on a CAN adapter..."</string>
     <string name="usb_permission">"USB: Please grant permission!"</string>
-    <string name="usb_connected">"USB: Connected to SLCAN"</string>
+    <string name="usb_connected">"USB: Connected to "</string>
     <string name="usb_stopping">"USB: Stopping"</string>
     <string name="usb_stopped">"USB: Stopped"</string>
-    <string name="usb_error">"USB: Write error"</string>
+    <string name="usb_error">"USB: Bus error"</string>
     <string name="elm_not_started">"ELM: Not Started"</string>;
     <string name="elm_wait">"ELM: Wait a ELM327 client on "</string>
     <string name="elm_connected">"ELM: Connected to "</string>
@@ -23,12 +26,21 @@
     <string name="elm_stopped">"ELM: Stopped"</string>
     <string name="elm_error">"ELM: Send error"</string>
     <string name="net_not_started">"NET: Not Started"</string>
-    <string name="net_wait">"NET: Wait a client on "</string>
+    <string name="net_wait">"NET: Wait a cannelloni client on "</string>
     <string name="net_connected">"NET: Connected to "</string>
     <string name="net_transmit">"NET: Transmit data"</string>
+    <string name="net_protocol">"NET: Not a cannelloni client"</string>
     <string name="net_stopping">"NET: Stopping"</string>
     <string name="net_stopped">"NET: Stopped"</string>
     <string name="net_error">"NET: Send error"</string>
+    <!-- Direction is named from the client's end, so there is nothing to
+         guess at: "client to bus" means the client sends and we forward. -->
+    <string-array name="net_mode_entries">
+        <item>Disabled</item>
+        <item>Both directions</item>
+        <item>Client to bus only</item>
+        <item>Bus to client only</item>
+    </string-array>
     <string-array name="autostart">
         <item>Disabled</item>
         <item>Enabled</item>

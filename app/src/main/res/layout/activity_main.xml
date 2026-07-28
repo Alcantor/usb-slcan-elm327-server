@@ -73,6 +73,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewStatusElm" />
 
+
+    <!-- Deliberately uncapped: the labels are long enough that a width limit
+         starves the fields, and a headunit in landscape has the room to spare.
+         The spinners ellipsise what they cannot fit, so every dp the column
+         gives up is a dp of adapter name or mode that stops being readable. -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="0dp"
@@ -84,18 +89,47 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="400dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- The labels size themselves to their text; this barrier tracks
+                 whichever ends up widest, and every field starts from it. That
+                 is what keeps the fields in one column while still letting a
+                 translation make the labels wider. -->
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrierLabels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="end"
+                app:constraint_referenced_ids="textViewCanDevice,textViewElmPort,textNetMode,textViewCanPort,textAutostart" />
+
+            <TextView
+                android:id="@+id/textViewCanDevice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="@string/can_device"
+                app:layout_constraintBottom_toBottomOf="@+id/spinnerCanDevice"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/spinnerCanDevice" />
+
+            <Spinner
+                android:id="@+id/spinnerCanDevice"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="24dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/barrierLabels"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/textViewElmPort"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
                 android:text="@string/elm_port"
                 app:layout_constraintBottom_toBottomOf="@+id/editTextElmPort"
-                app:layout_constraintEnd_toStartOf="@+id/editTextElmPort"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/editTextElmPort" />
 
@@ -103,42 +137,42 @@
                 android:id="@+id/editTextElmPort"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginEnd="24dp"
-                android:ems="10"
                 android:inputType="number"
                 android:maxLength="5"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textViewElmPort"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintStart_toEndOf="@+id/barrierLabels"
+                app:layout_constraintTop_toBottomOf="@+id/spinnerCanDevice" />
 
             <TextView
-                android:id="@+id/textNetEnabled"
-                android:layout_width="0dp"
+                android:id="@+id/textNetMode"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:text="@string/net_enabled"
-                app:layout_constraintBottom_toBottomOf="@+id/switchNetEnabled"
-                app:layout_constraintEnd_toStartOf="@+id/switchNetEnabled"
+                android:text="@string/net_mode"
+                app:layout_constraintBottom_toBottomOf="@+id/spinnerNetMode"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/switchNetEnabled" />
+                app:layout_constraintTop_toTopOf="@+id/spinnerNetMode" />
 
-            <Switch
-                android:id="@+id/switchNetEnabled"
+            <Spinner
+                android:id="@+id/spinnerNetMode"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginEnd="24dp"
+                android:entries="@array/net_mode_entries"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textNetEnabled"
+                app:layout_constraintStart_toEndOf="@+id/barrierLabels"
                 app:layout_constraintTop_toBottomOf="@+id/editTextElmPort" />
 
             <TextView
-                android:id="@+id/textViewNetPort"
-                android:layout_width="0dp"
+                android:id="@+id/textViewCanPort"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
                 android:text="@string/net_port"
                 app:layout_constraintBottom_toBottomOf="@+id/editTextNetPort"
-                app:layout_constraintEnd_toStartOf="@+id/editTextNetPort"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/editTextNetPort" />
 
@@ -146,22 +180,21 @@
                 android:id="@+id/editTextNetPort"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginEnd="24dp"
-                android:ems="10"
                 android:inputType="number"
                 android:maxLength="5"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textViewNetPort"
-                app:layout_constraintTop_toBottomOf="@+id/switchNetEnabled" />
+                app:layout_constraintStart_toEndOf="@+id/barrierLabels"
+                app:layout_constraintTop_toBottomOf="@+id/spinnerNetMode" />
 
             <TextView
                 android:id="@+id/textAutostart"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
                 android:text="@string/auto_start"
                 app:layout_constraintBottom_toBottomOf="@+id/spinnerAutostart"
-                app:layout_constraintEnd_toStartOf="@+id/spinnerAutostart"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/spinnerAutostart" />
 
@@ -169,10 +202,11 @@
                 android:id="@+id/spinnerAutostart"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginEnd="24dp"
                 android:entries="@array/autostart"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textAutostart"
+                app:layout_constraintStart_toEndOf="@+id/barrierLabels"
                 app:layout_constraintTop_toBottomOf="@+id/editTextNetPort"  />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

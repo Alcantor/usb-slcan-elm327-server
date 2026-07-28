@@ -10,8 +10,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "USB SLCAN to ELM327 Server"
+rootProject.name = "USB CAN to ELM327 Server"
 include ':app'
+
+/* The androidCAN library is its own repository, pulled in as a submodule. The
+ * extra level is because that repository holds the library module beside its
+ * own test app. Clone with --recurse-submodules, or this path will not exist. */
+include ':androidCAN'
+project(':androidCAN').projectDir = new File(settingsDir, 'androidCAN/androidCAN')

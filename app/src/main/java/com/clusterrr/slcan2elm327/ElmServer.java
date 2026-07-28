@@ -1,5 +1,9 @@
 package com.clusterrr.slcan2elm327;
 
+import com.androidcan.CanFrame;
+import com.androidcan.FrameListener;
+import com.androidcan.ReceivedFrame;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,11 +16,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ElmServerThread extends Thread {
+public class ElmServer implements FrameListener {
     private final Service service;
     private final int port;
-    private ServerSocket serverSock;
-    private Socket sock;
+    /* Written by the elm-rx thread, read by close() on the caller's thread. */
+    private volatile ServerSocket serverSock;
+    private volatile Socket sock;
     private InputStream dataInputStream;
     private OutputStream dataOutputStream;
     private final byte[] buffer;
@@ -24,10 +29,11 @@ public class ElmServerThread extends Thread {
     private boolean echo, space, header, linefeed;
     private int timeout, sendid, recvid, recvmask;
     private final Pattern patAT, patST, patData;
-    private BlockingQueue<CANFrame> rxqueue;
-    private boolean running;
+    private final BlockingQueue<CanFrame> rxqueue;
+    private Thread rxThread;
+    private volatile boolean running;
 
-    public ElmServerThread(Service service, int port) {
+    public ElmServer(Service service, int port) {
         this.service = service;
         this.port = port;
         serverSock = null;
@@ -42,18 +48,25 @@ public class ElmServerThread extends Thread {
         running = true;
     }
 
-    @Override
-    public void run() {
+    public void start() {
+        rxThread = new Thread(this::receive, "elm-rx");
+        rxThread.start();
+    }
+    private void receive() {
         try {
             serverSock = new ServerSocket(port);
             while (running) {
                 service.statusUpdateElm(service.getString(R.string.elm_wait) + service.localIp);
                 sock = serverSock.accept();
-                service.statusUpdateElm(service.getString(R.string.elm_connected) + sock.getRemoteSocketAddress());
-                sock.setTcpNoDelay(true);
-                dataInputStream = sock.getInputStream();
-                dataOutputStream = sock.getOutputStream();
+                /* Everything past accept() belongs inside the try: a client
+                 * that connects and vanishes straight away makes these throw,
+                 * and out here that would escape the accept loop for good -
+                 * the server would stop listening while running is still true. */
                 try {
+                    service.statusUpdateElm(service.getString(R.string.elm_connected) + sock.getRemoteSocketAddress());
+                    sock.setTcpNoDelay(true);
+                    dataInputStream = sock.getInputStream();
+                    dataOutputStream = sock.getOutputStream();
                     /* Parse data */
                     while (running) {
                         if (dataInputStream == null) break;
@@ -64,9 +77,10 @@ public class ElmServerThread extends Thread {
                         proceedBuffer();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    if (running) e.printStackTrace();
+                } finally {
+                    closeClient();
                 }
-                closeClient();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -242,20 +256,19 @@ public class ElmServerThread extends Thread {
                 max = Integer.parseInt(matcherData.group(3), 16);
             }
             rxqueue.clear();
-            CANFrame f = CANFrame.fromELM(sendid, false, data);
-            if(f != null) service.threadUsb.sendCAN(f);
+            CanFrame f = Elm.fromELM(sendid, false, data);
+            if(f != null) service.usbCan.sendCAN(f);
             int count = 0;
             while (count < max) {
                 f = rxqueue.poll(timeout, TimeUnit.MILLISECONDS);
                 if (f == null) break;
-                write(f.toELM(header, space, linefeed));
+                write(Elm.toELM(f, header, space, linefeed));
                 ++count;
                 /* If it's a single frame exit immediately */
-                if(f.iso15765_isSingleFrame()) break;
+                if(Elm.isSingleFrame(f)) break;
                 /* If it's a first frame, send flow control packet */
-                if(f.iso15765_isFirstFrame()) {
-                    service.threadUsb.sendCAN(new CANFrame(
-                            sendid, false, false, new byte[] {0x30, 0x00, 0x00}));
+                if(Elm.isFirstFrame(f)) {
+                    service.usbCan.sendCAN(Elm.flowControl(sendid, false));
                 }
             }
             if (count > 0) write(">");
@@ -264,21 +277,33 @@ public class ElmServerThread extends Thread {
     }
 
     /**
-     * Function called by the Usb Serial Thread.
-     * @param f CAN Frame received from device.
+     * Function called by the androidCAN driver's RX thread.
+     * @param received CAN Frame received from device.
      */
-    public void proceedCAN(CANFrame f){
+    @Override
+    public void onFrameReceived(ReceivedFrame received){
+        CanFrame f = received.frame;
         /* No need for AtomicInteger here on recvmask and recvid, the rxqueue will be clear. */
         if((f.id & recvmask) == recvid) rxqueue.offer(f);
     }
 
-    private void closeClient() throws IOException {
-        if(sock != null){
-            dataOutputStream.close();
-            dataInputStream.close();
-            sock.close();
-            sock = null;
-            woff = roff = 0;
+    /**
+     * Drop the current client. Closing the socket closes the streams under it,
+     * so they need no separate close. Never throws, so close() can call it
+     * without a guard.
+     */
+    private void closeClient() {
+        /* Taken and cleared in one go: the rx thread's finally and close() can
+         * both land here at once, and re-reading the field between the test and
+         * the close would let one of them NullPointerException. */
+        Socket s = sock;
+        sock = null;
+        woff = roff = 0;
+        if (s == null) return;
+        try {
+            s.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -286,9 +311,17 @@ public class ElmServerThread extends Thread {
         try {
             service.statusUpdateElm(service.getString(R.string.elm_stopping));
             running = false;
-            closeClient();
-            if(serverSock != null) serverSock.close();
-            join();
+            /* Closing is what actually stops the thread: neither running=false
+             * nor interrupt() disturbs a blocking socket read, so elm-rx only
+             * leaves read() when the socket under it goes. It then runs its own
+             * closeClient() - harmless, Socket.close() ignores an already
+             * closed socket. Server socket first so accept() cannot re-arm. */
+            if(serverSock != null) serverSock.close(); // Unblocks accept().
+            closeClient();                             // Unblocks read().
+            if(rxThread != null) {
+                rxThread.join();
+                rxThread = null;
+            }
             service.statusUpdateElm(service.getString(R.string.elm_stopped));
         } catch (Exception e) {
             e.printStackTrace();

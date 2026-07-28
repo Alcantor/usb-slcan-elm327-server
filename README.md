@@ -1,8 +1,8 @@
-# CANable SLCAN to ELM327 Bridge
+# USB CAN to ELM327 Bridge
 
-Android application that binds an USB CANable adapter to an ELM327 Application.
+Android application that binds a USB CAN adapter to an ELM327 Application.
 
-Connect a USB CANable adapter to the USB OTG port of your Android device. Start this app and connect to it using an ELM327 client, such as [OBDFusion](https://play.google.com/store/apps/details?id=OCTech.Mobile.Applications.TouchScan) or [Torque](https://play.google.com/store/apps/details?id=org.prowl.torque).
+Connect a USB CAN adapter to the USB OTG port of your Android device. Start this app and connect to it using an ELM327 client, such as [OBDFusion](https://play.google.com/store/apps/details?id=OCTech.Mobile.Applications.TouchScan) or [Torque](https://play.google.com/store/apps/details?id=org.prowl.torque).
 
 Configure the OBD application as you would with a WiFi ELM327, using the port 127.0.0.1 if on the same Android device.
 
@@ -25,21 +25,84 @@ I've connected the CANable behind a Joying 6.2 headunit.
 ## Compatibility
 
  - Only for CAN-Bus based car (No K-Line Support).
- - Only for SLCAN based CAN-Bus adapter.
+ - The adapter is driven by the [androidCAN](https://github.com/Alcantor/androidCAN) library, which speaks
+   the candleLight/gs_usb and 8devices/usb_8dev protocols natively over the
+   Android USB Host API - no SLCAN serial firmware needed. Supported adapters are
+   whatever is listed in `GsUsb.SUPPORTED_DEVICES` and `Usb8Dev.SUPPORTED_DEVICES`.
+ - **8devices/usb_8dev** - the [Korlan USB2CAN](https://www.8devices.com/products/korlan).
+ - **candleLight/gs_usb** - the CANable and its variants, which are well explained on
+   [Elmue's CANable Firmware Update](https://netcult.ch/elmue/CANable%20Firmware%20Update)
+   page; an improved firmware can be installed from there if necessary.
 
-## Use the SLCAN over NET
+## Building
+
+The [androidCAN](https://github.com/Alcantor/androidCAN) library is a submodule, so clone with it:
+
+```
+git clone --recurse-submodules https://github.com/Alcantor/usb-slcan-elm327-server.git
+```
+
+(or `git submodule update --init` in an existing clone - without it the library
+directory is empty and Gradle cannot configure the build).
+
+Then `./gradlew :app:assembleDebug` (needs `sdk.dir` in `local.properties`).
+
+To build something installable, put the signing key in a `keystore.properties`
+next to `settings.gradle` - it is gitignored, and without it the release build
+is left unsigned rather than failing:
+
+```
+storeFile=/path/to/upload-keystore.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+`./gradlew :app:assembleRelease` then writes a signed
+`app/build/outputs/apk/release/can2elm327-v<version>-release.apk`.
+
+## Use the CAN bus over the network
+
+The bus is tunnelled with the
+[cannelloni](https://github.com/mguentner/cannelloni) protocol over **TCP**,
+which replaced the older SLCAN-over-TCP server. The app is the cannelloni
+*server*: it listens on **Cannelloni listen port** (20000 by default) and the
+client dials in. One client at a time: the server handles a single connection,
+and a second one waits until the first disconnects. Fanning the bus out to
+several tools at once would be useful, it is simply not implemented.
+
+Note that cannelloni's TCP mode is not the same framing as its UDP mode: the
+connection opens with a `CANNELLONIv1` handshake in both directions and then
+streams frames back to back, with none of the `version/op_code/seq_no/count`
+packet header that UDP datagrams carry.
 
 ### With a Linux client
 
 ```
-socat -d -d TCP:192.168.xxx.yyy:4444 PTY,link=/tmp/slcan,raw,echo=0
-slcan_attach -o -c /tmp/slcan
-ip link set slcan0 up
+sudo ip link add name can0 type vcan
+sudo ip link set can0 up
+cannelloni -I can0 -C c -R 192.168.xxx.yyy -r 20000
 ```
+
+`-C c` is what selects TCP client mode; point `-R` at the Android device.
+`candump can0` / `cansend can0 7DF#0201050000000000` then work as usual.
 
 ### Python-can
 
-Select "slcan" interface and put "socket://192.168.xxx.yyy:4444" as device.
+[`can-cannelloni`](https://pypi.org/project/can-cannelloni/) is a python-can
+backend that speaks this protocol, so a Python program can talk to the app
+directly - no `cannelloni` binary and no `vcan` in between:
+
+```python
+import can
+
+bus = can.Bus(interface="cannelloni", channel="192.168.xxx.yyy:20000")
+bus.send(can.Message(arbitration_id=0x7DF, data=b"\x02\x01\x05"))
+print(bus.recv(1.0))
+```
+
+Failing that, point python-can's "socketcan" interface at the `can0` that the
+`cannelloni` client above bridges.
 
 ## FAQ
 
@@ -49,11 +112,12 @@ Select "slcan" interface and put "socket://192.168.xxx.yyy:4444" as device.
 
 **Q: Why not use the Candlelight instead of the slcan Firmware?**
 
-**A:** It would be probably better to use the Candlelight Firmware, but an implementation for the gs_usb on Android has to be done.
+**A:** That is exactly what this version does - the gs_usb implementation for Android now exists, in the [androidCAN](https://github.com/Alcantor/androidCAN) library.
 
 **Q: My device is not detected?**
 
-**A:** Ensure that you have the [slcan firmware](https://canable.io/updater/) on it.
+**A:** Check that its USB vendor/product ID is in the androidCAN supported-device
+tables, and mirrored in `app/src/main/res/xml/usb_device_filter.xml`.
 
 **Q: Waren't you happy with the OBDLink LX adapter?**
 
@@ -62,3 +126,4 @@ Select "slcan" interface and put "socket://192.168.xxx.yyy:4444" as device.
 **Q: How do I prevent the Joying Head Unit from terminating the service when going into deep sleep (turning key off)?**
 
 **A:** You need to add the application to the file "/oem/app/skipkillapp.prop" file. See "JoyingUpdate.zip" file.
+
